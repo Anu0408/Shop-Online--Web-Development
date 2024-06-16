@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block title %}Shop{% endblock %}
+
+<!-- content -->
+{% block content %}
+<div class="container-fluid">
+    <div class="h4">Shop</div>
+    <form class="row row-cols-lg-auto g-3 align-items-center" style="margin-bottom:5px">
+        <div class="col-12">
+            <label class="form-label" for="name">Name</label>
+            <input class="form-control" type="text" id="name" name="name" placeholder="Name" value="{{request.args.get('name') or ''}}">
+        </div>
+        <div class="col-12">
+            {% set options = ["Clothing", "Food", "Home", "Electronics"] %}
+            <label class="form-label" for="category">Category</label>
+            <select class="form-select" id="category" name="category" value="{{request.args.get('category')}}">
+                <option value="">Choose...</option>
+                {% for op in options %}
+                {# using an inline if to output the selected attribute if it matches the op #}
+                <option {{'selected' if request.args.get('category')==op }} value="{{op}}">{{op|capitalize}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="price">Price</label>
+            <select class="form-select" id="price" name="price" value="{{request.args.get('price')}}">
+                <option value="">Choose...</option>
+                <option {{'selected' if request.args.get('price')=="ASC" }} value="ASC">Low to High</option>
+                <option {{'selected' if request.args.get('price')=="DESC" }} value="DESC">High to Low</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <!-- hack to align button with inputs in inline form with labels-->
+            <div>&nbsp;</div>
+            <button type="submit" class="btn btn-primary mt-2">Filter</button>
+            <!--trick to reset a prefilled form to empty-->
+            <a href="?" class="btn btn-secondary mt-2">Reset</a>
+        </div>
+    </form>
+    <div class="row">
+        <p>Click on the product name for more details</p>
+        {% for row in rows %}
+        <div class="col" style="margin: 5px;">
+            <div class="card text-dark bg-light border" style="width: 20em">
+                <div class="card-header">
+                    Stock: {{row["stock"]}}
+                </div>
+                <div class="card-body">
+                    <div class="card-title">
+                        <b>
+                            <a href="{{url_for('shop.itemdetails', id=row['id'])}}" style="text-decoration: none; color:cornflowerblue">
+                                {{row["name"]}}
+                            </a>
+                        </b>
+                    </div>
+                    <div class="card-text lead">
+                        {{row["description"]}}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-text lead">
+                        Cost: {{row["unit_price"]}}
+                    </div>
+                    <form action="{{url_for('shop.cart')}}" method="POST">
+                        <input type="hidden" name="id" value="{{row['id']}}" />
+                        <input type="number" class="form-control" name="quantity" value="1" />
+                        <div class="d-grid mt-1">
+                            <input type="submit" value="Add" class="btn btn-primary" />
+                        </div>
+                    </form>
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.has_role("Admin") %}
+                    <div class="d-grid mt-1">
+                    <a href="{{url_for('shop.item', id=row['id'])}}" class="btn btn-secondary">Edit</a>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
